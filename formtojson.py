@@ -8,7 +8,36 @@ Y_MARGIN = 10
 YEAR_MARGIN = 1000
 # PASS_RATE = .6
 
-def getLines (json_obj):
+
+#From json, get the content given the keys
+def getContentFromKey (json_obj, key_list):
+
+	#get the clustered word list
+	clustered_list = getCluster (json_obj)
+
+	#content from each key
+	content_list = []
+
+	for key in key_list:
+		for cluster in clustered_list:
+			return
+
+#concaternate the text from the clustered list
+def concat(clustered_list):
+
+	text_list = []
+	for cluster in clustered_list:
+		concat_text = ''
+		for word_info in cluster:
+			concat_text += word_info['text']
+		text_list.append (concat_text)
+
+	print (text_list)
+	return text_list
+
+
+
+def getCluster (json_obj):
 	line_infos = [region["lines"] for region in json_obj["regions"]]
 	word_infos = []
 	for line in line_infos:
@@ -16,22 +45,23 @@ def getLines (json_obj):
 	        for word_info in word_metadata["words"]:
 	            word_infos.append(word_info)
 	
-	word_list = gatherText (word_infos)
-	clusterFromY (word_list)
+	# sort according to the y-coord
+	word_infos.sort(key = lambda i: int(i['boundingBox'].split(',')[1]))
+	return clusterFromY (word_infos)
+	# print (word_infos)
+	# return clusterFromY (word_infos)
 
 
-
-# 이 함수는 boundingBox 좌표와 text를 받아서 keyword 시작으로 concaternate 함
 def gatherText (word_list):
-	# for i in word_list:
-	# 	print (i['boundingBox'].split(',')[1])
+# 	# for i in word_list:
+# 	# 	print (i['boundingBox'].split(',')[1])
 
-	# print (word_list)
-	# print ('\n')
+# 	# print (word_list)
+# 	# print ('\n')
 	word_list.sort(key = lambda i: int(i['boundingBox'].split(',')[1]))
-	# print (word_list)
+# 	# print (word_list)
 
-	return word_list
+# 	return word_list
 
 	# sorted (word_list, key = lambda i: i['boundingBox'].split(',')[0])
 	# print ('\n')
@@ -66,6 +96,8 @@ def clusterFromY (word_list):
 		# for word_info in cluster:
 		# 	print (word_info['text'], end = ' ')
 		# print ('\n')
+
+	print (clusters)
 	return clusters
 
 
@@ -246,9 +278,12 @@ def findText (json_input, x_coord, y_coord, x_gap, y_gap):
 	        yield from findText(item, x_coord, y_coord, x_gap, y_gap)
 
 
-f = open('606-86-13724.txt', mode='rt', encoding='utf-8')
+TEST_JSON = 'C:\\Users\\User\\Desktop\\전진하\\606-86-13724.txt'
+f = open(TEST_JSON, mode='rt', encoding='utf-8')
 
 json_obj = json.loads (f.read())
+
+concat(getCluster (json_obj))
 
 # example = [None, 7, None, 10.9, 13.01]
 # print (getDiffAverage (example))
