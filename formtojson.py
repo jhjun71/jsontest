@@ -29,23 +29,29 @@ def getContentFromKey (json_obj, key_list):
 			text_idx = -1
 	
 			if text.startswith (key):
+				print ('text: ', text)
 				# index of text in text_list in order to find the right cluster in clustered_list
 				text_idx = text_list.index(text)
+				print ('text_idx: ', text_idx)
 				# start index of the content in text string
 				# content_idx = text.index(key[-1])+1
 				cluster = clustered_list[text_idx]
+				print ('cluster: ', cluster)
 
 				for word_info in cluster:
 					value = word_info['text']
+					print ('value: ', value)
 					# last character of text is equal to the last character of key
 					if value[-1] == key[-1] : 
 						content_idx = cluster.index(word_info)
+						print ('content_idx: ', content_idx)
+						break
 						# last two character coincides OR the last character of the previous one
 						# if value[-2] == key[-2] or cluster[current_idx-1]['text'][-1] == key[-2]:
-						if key[-2] in [value[-2], cluster[content_idx-1]['text'][-1]]:
-							if key[-3] in [value[-3], cluster[content_idx-1]['text'][-2], cluster[content_idx-2]['text'][-1]]:
+						# if key[-2] in [value[-2], cluster[content_idx-1]['text'][-1]]:
+							# if key[-3] in [value[-3], cluster[content_idx-1]['text'][-2], cluster[content_idx-2]['text'][-1]]:
 
-								break
+								# break
 
 				# cluster = clustered_list[text_idx]
 				# print (cluster)
@@ -322,7 +328,7 @@ def findText (json_input, x_coord, y_coord, x_gap, y_gap):
 	        yield from findText(item, x_coord, y_coord, x_gap, y_gap)
 
 
-TEST_JSON = 'C:\\Users\\User\\Desktop\\전진하\\606-86-13724.txt'
+TEST_JSON = '606-86-13724.txt'
 f = open(TEST_JSON, mode='rt', encoding='utf-8')
 
 json_obj = json.loads (f.read())
