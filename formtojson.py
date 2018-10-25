@@ -23,26 +23,40 @@ def getContentFromKey (json_obj, key_list):
 	# per key, find the index of the cluster start with key
 
 	for key in key_list:
+		content_idx = 0
+		
 		for text in text_list:
 			text_idx = -1
-			content_idx = 0
-
+	
 			if text.startswith (key):
 				# index of text in text_list in order to find the right cluster in clustered_list
 				text_idx = text_list.index(text)
 				# start index of the content in text string
-				content_idx = text.index(key[-1])+1
-				break
+				# content_idx = text.index(key[-1])+1
+				cluster = clustered_list[text_idx]
+
+				for word_info in cluster:
+					value = word_info['text']
+					# last character of text is equal to the last character of key
+					if value[-1] == key[-1] : 
+						content_idx = cluster.index(word_info)
+						# last two character coincides OR the last character of the previous one
+						# if value[-2] == key[-2] or cluster[current_idx-1]['text'][-1] == key[-2]:
+						if key[-2] in [value[-2], cluster[content_idx-1]['text'][-1]]:
+							if key[-3] in [value[-3], cluster[content_idx-1]['text'][-2], cluster[content_idx-2]['text'][-1]]:
+
+								break
+
+				# cluster = clustered_list[text_idx]
+				# print (cluster)
+				_list = []
+				for content_info in cluster[content_idx+1:]:
+					_list.append(content_info['text'])
+				content_list.append (' '.join(_list))
+
+		#if can't find the text, append NULL	
 		if content_idx == 0:
 			content_list.append ('')
-		else:
-			cluster = clustered_list[text_idx]
-			# print (cluster)
-			_list = []
-			for word_info in cluster[content_idx:]:
-				_list.append(word_info['text'])
-			content_list.append (' '.join(_list))
-
 
 	print (content_list)
 
