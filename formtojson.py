@@ -3,6 +3,7 @@ from itertools import chain
 from pprint import pprint
 
 # KEYWORD = ['상호(법인명)', '사업자등록번호', '성명(대표자)', '사업장소재지', '2018년', '월', '일']
+KEYWORD = ['상호(법인명)', '사업자등록번호', '성명(대표자)', '주민(법인)등록번호', '사업장소재지']
 X_MARGIN = 5
 Y_MARGIN = 10
 YEAR_MARGIN = 1000
@@ -14,13 +15,42 @@ def getContentFromKey (json_obj, key_list):
 
 	#get the clustered word list
 	clustered_list = getCluster (json_obj)
+	text_list = concat(clustered_list)
 
 	#content from each key
 	content_list = []
 
+	# per key, find the index of the cluster start with key
+
 	for key in key_list:
-		for cluster in clustered_list:
-			return
+		for text in text_list:
+			text_idx = -1
+			content_idx = 0
+
+			if text.startswith (key):
+				# index of text in text_list in order to find the right cluster in clustered_list
+				text_idx = text_list.index(text)
+				# start index of the content in text string
+				content_idx = text.index(key[-1])+1
+				break
+		if content_idx == 0:
+			content_list.append ('')
+		else:
+			cluster = clustered_list[text_idx]
+			# print (cluster)
+			_list = []
+			for word_info in cluster[content_idx:]:
+				_list.append(word_info['text'])
+			content_list.append (' '.join(_list))
+
+
+	print (content_list)
+
+
+
+	# per key, cluster and the index, get the remaining text
+
+
 
 #concaternate the text from the clustered list
 def concat(clustered_list):
@@ -283,7 +313,7 @@ f = open(TEST_JSON, mode='rt', encoding='utf-8')
 
 json_obj = json.loads (f.read())
 
-concat(getCluster (json_obj))
+getContentFromKey (json_obj, KEYWORD)
 
 # example = [None, 7, None, 10.9, 13.01]
 # print (getDiffAverage (example))
