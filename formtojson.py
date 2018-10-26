@@ -99,10 +99,12 @@ def getContentFromKey (json_obj, key_list):
 				num = text_idx_list[idx-1]+1
 			text_idx_list[idx] = num
 			cluster = clustered_list[num]
+			print ('Missing Cluster: ', cluster)
 
 			
 			content = ' '.join([word_info['text'] for word_info in cluster if int(word_info['boundingBox'].split(',')[0]) > min_x - X_MARGIN])
 			print (content)
+			content_list[idx] = content
 
 
 
