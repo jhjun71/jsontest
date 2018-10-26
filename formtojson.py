@@ -20,19 +20,27 @@ def getContentFromKey (json_obj, key_list):
 	#content from each key
 	content_list = []
 
+	#coord list of the content
+	coord_list = []
+
+	#text_idx list
+	text_idx_list = []
+
 	# per key, find the index of the cluster start with key
 
 	for key in key_list:
-		content_idx = 0
+		text_idx = -1
+		content_idx = -1
 		
 		for text in text_list:
-			text_idx = -1
+			
 	
 			if text.startswith (key):
 				print ('text: ', text)
 				# index of text in text_list in order to find the right cluster in clustered_list
 				text_idx = text_list.index(text)
 				print ('text_idx: ', text_idx)
+
 				# start index of the content in text string
 				# content_idx = text.index(key[-1])+1
 				cluster = clustered_list[text_idx]
@@ -45,7 +53,12 @@ def getContentFromKey (json_obj, key_list):
 					if value[-1] == key[-1] : 
 						content_idx = cluster.index(word_info)
 						print ('content_idx: ', content_idx)
-						break
+						if (len(value) > 1 and value[-2] == key[-2]) or (len(value)==1 and cluster[content_idx-1]['text'][-1] == key[-2]):
+							boundingBoxVal = cluster[content_idx+1]['boundingBox'].split(',')
+							coord_list.extend ([boundingBoxVal[0], boundingBoxVal[1]])
+							break
+						else:
+							content_idx = -1
 						# last two character coincides OR the last character of the previous one
 						# if value[-2] == key[-2] or cluster[current_idx-1]['text'][-1] == key[-2]:
 						# if key[-2] in [value[-2], cluster[content_idx-1]['text'][-1]]:
@@ -55,22 +68,63 @@ def getContentFromKey (json_obj, key_list):
 
 				# cluster = clustered_list[text_idx]
 				# print (cluster)
+
 				_list = []
 				for content_info in cluster[content_idx+1:]:
 					_list.append(content_info['text'])
 				content_list.append (' '.join(_list))
 
-		#if can't find the text, append NULL	
-		if content_idx == 0:
-			content_list.append ('')
+		text_idx_list.append (text_idx)
 
-	print (content_list)
+
+		#if can't find the text, append NULL	
+		if content_idx == -1:
+			content_list.append ('')
+			coord_list.extend (['']*2)
+
+	min_x = min_positive (coord_list[0::2])
+	print ('min X: ', min_x)
+
+	for text_idx in text_idx_list:
+		if text_idx == -1:
+			idx = text_idx_list.index(text_idx)
+			if idx == 0:
+				non_neg_idx = 0
+				for x in text_idx_list[idx+1:]:
+					if x >0: 
+						non_neg_idx = text_idx_list.index(x)
+						break
+				num = text_idx_list[non_neg_idx]-non_neg_idx
+			else:
+				num = text_idx_list[idx-1]+1
+			text_idx_list[idx] = num
+			cluster = clustered_list[num]
+
+			
+			content = ' '.join([word_info['text'] for word_info in cluster if int(word_info['boundingBox'].split(',')[0]) > min_x - X_MARGIN])
+			print (content)
+
+
+
+	#Fill the missing content from content list using the coordnate list
+	y_gap = getDiffAverage (coord_list[1::2])
+	print ('Y-gap average: ', y_gap)
+
+	print ('text_idx are: ', text_idx_list)
+	print ('Content List: ', content_list)
+	print ('Coord List', coord_list)
+	return content_list
 
 
 
 	# per key, cluster and the index, get the remaining text
 
-
+def min_positive(L):
+    # Get all positive numbers into another list
+    pos_only = [int(x) for x in L if x!='']
+    if pos_only:
+        return min (pos_only)
+    raise ValueError('No postive numbers in input')
 
 #concaternate the text from the clustered list
 def concat(clustered_list):
@@ -120,7 +174,7 @@ def gatherText (word_list):
 
 #K-mean 구현
 from statistics import mean
-Y_ERROR = 5
+Y_ERROR = 10
 
 def clusterFromY (word_list):
 	clusters = [[]]
@@ -174,9 +228,12 @@ def findMissingValue (json_input, value_list):
 	x_coord_list = []
 	y_coord_list = []
 
-	if None in value_list:
+	# value_list = [v.replace('', None) for v in value_list]
+	# if None in value_list:
+	if '' in value_list:
 		for v in value_list:
-			if v != None:
+			# if v != None:
+			if v != '':
 				gen_coord = findCoord (json_input, v)
 				coord = next(gen_coord, None).split(',')
 				# if coord != None:
@@ -190,6 +247,7 @@ def findMissingValue (json_input, value_list):
 		# print ('Y-coord: ', y_coord_list)
 
 		y_gap = getDiffAverage (y_coord_list)
+		print ('Y-gap: ', y_gap)
 
 		if y_gap > 5 : # not too small
 			missing_val_idx = value_list.index(None)
@@ -219,10 +277,12 @@ def getDiffAverage (value_list):
 	diffAvgList = []
 	l = len(value_list)
 
-	if (value_list.count(None) < l-1): # can't find one or two non-None values in the list
+	# if (value_list.count(None) < l-1): # can't find one or two non-None values in the list
+	if (value_list.count('')<l-1):
 
 		for index, v in enumerate (value_list):
-			while v == None and index < l-1:
+			# while v == None and index < l-1:
+			while v == '' and index < l-1:
 				index += 1
 
 			init_idx = index
@@ -235,11 +295,13 @@ def getDiffAverage (value_list):
 				final_idx = init_idx+1
 				final_val = value_list [final_idx]
 
-				while final_val == None and final_idx < l-1:
+				# while final_val == None and final_idx < l-1:
+				while final_val == '' and final_idx < l-1:
 					final_idx += 1
 					final_val = value_list [final_idx]
 					# print (final_idx, final_val)
-				if final_val != None:
+				# if final_val != None:
+				if final_val != '':
 					diffAvgList.append ((int(final_val)-int(init_val))/(final_idx-init_idx))
 
 		# print (diffAvgList)
@@ -328,17 +390,19 @@ def findText (json_input, x_coord, y_coord, x_gap, y_gap):
 	        yield from findText(item, x_coord, y_coord, x_gap, y_gap)
 
 
-TEST_JSON = '606-86-13724.txt'
-f = open(TEST_JSON, mode='rt', encoding='utf-8')
 
-json_obj = json.loads (f.read())
 
-getContentFromKey (json_obj, KEYWORD)
+# TEST_JSON = 'C:\\Users\\User\\Desktop\\전진하\\1_참여기업_사업자등록증명\\1A_35_20181018\\410-86-24862.txt'
+# f = open(TEST_JSON, mode='rt', encoding='utf-8')
+
+# json_obj = json.loads (f.read())
+
+# getContentFromKey (json_obj, KEYWORD)
 
 # example = [None, 7, None, 10.9, 13.01]
 # print (getDiffAverage (example))
 
-exam_string = [None,'606-86-13724',None,'180111-0654508',None]
+# exam_string = [None,'606-86-13724',None,'180111-0654508',None]
 # findMissingValue(json_obj, exam_string)
 # 
 
