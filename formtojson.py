@@ -9,6 +9,42 @@ Y_MARGIN = 10
 YEAR_MARGIN = 1000
 # PASS_RATE = .6
 
+#From json, get the content starts with the key
+#Returns the first content located the y-coord > y_gap
+def getContentWithKey (json_obj, key_lookup, y_gap):
+	#get the clustered word list
+	clustered_list = getCluster (json_obj)
+	text_list = concat(clustered_list)
+
+	#content from each key
+	content=''
+
+
+	text_idx = -1
+	content_idx = -1
+	
+	for text in text_list:
+		
+		if text.startswith (key_lookup):
+			print ('text: ', text)
+			# index of text in text_list in order to find the right cluster in clustered_list
+			text_idx = text_list.index(text)
+			print ('text_idx: ', text_idx)
+
+			# start index of the content in text string
+			# content_idx = text.index(key[-1])+1
+			cluster = clustered_list[text_idx]
+			print ('cluster: ', cluster)
+
+			#if y-coord is greater then y-gap
+			if int(cluster[0]['boundingBox'].split(',')[1]) > y_gap:
+
+				content = ' '.join(word_info['text'] for word_info in cluster)
+				break
+
+
+	print (content)
+	return content
 
 #From json, get the content given the keys
 def getContentFromKey (json_obj, key_list):
